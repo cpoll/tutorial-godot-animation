@@ -5,7 +5,7 @@ extends CharacterBody3D
 @onready var spring_arm = $SpringArmPivot/SpringArm3D
 @onready var animation_tree = $AnimationTree
 
-const SPEED = 5.0
+const MAX_SPEED = 5.0
 const JUMP_VELOCITY = 4.5
 const LERP_VAL = 0.15
 
@@ -41,14 +41,17 @@ func _physics_process(delta):
     var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
     direction = direction.rotated(Vector3.UP, spring_arm_pivot.rotation.y)
     
+    var speed = MAX_SPEED if not Input.is_action_pressed("walk") else MAX_SPEED / 3
+    
     if direction:
-        velocity.x = lerp(direction.x, direction.x * SPEED, LERP_VAL)
-        velocity.z = lerp(direction.z, direction.z * SPEED, LERP_VAL)
+        velocity.x = lerp(velocity.x, direction.x * speed, LERP_VAL)
+        velocity.z = lerp(velocity.z, direction.z * speed, LERP_VAL)
         armature.rotation.y = lerp_angle(armature.rotation.y, atan2(-velocity.x, -velocity.z), LERP_VAL)
     else:
         velocity.x = lerp(direction.x, 0.0, LERP_VAL)
         velocity.z = lerp(direction.z, 0.0, LERP_VAL)
 
-    animation_tree.set("parameters/BlendSpace1D/blend_position", velocity.length() / SPEED)
+    print(velocity.length() / MAX_SPEED)
+    animation_tree.set("parameters/BlendSpace1D/blend_position", velocity.length() / MAX_SPEED)
 
     move_and_slide()

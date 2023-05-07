@@ -1,4 +1,6 @@
 Tutorial from youtube.com/watch?v=VasHZZyPpYU
 
 ## TODO:
-- Fix blender animations not looping. I broke these at some point, the end frames don't match the beginning ones 
+- Jump animation
+- Alternate between multiple idle animations
+- Multiple jump animations (do a front-flip like a Night Elf)
