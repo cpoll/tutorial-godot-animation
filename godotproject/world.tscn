@@ -1,5 +1,6 @@
-[gd_scene load_steps=7 format=3 uid="uid://cari18uq33h48"]
+[gd_scene load_steps=8 format=3 uid="uid://cari18uq33h48"]
 
+[ext_resource type="PackedScene" uid="uid://cq4x2tug383bp" path="res://ragdoll.tscn" id="1_6sixf"]
 [ext_resource type="PackedScene" uid="uid://p1q5xjuhgq1r" path="res://humanoid.tscn" id="1_ghpse"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_an4xg"]
@@ -38,3 +39,6 @@ mesh = SubResource("PlaneMesh_lm6a7")
 shape = SubResource("ConcavePolygonShape3D_cfn4l")
 
 [node name="humanoid" parent="." instance=ExtResource("1_ghpse")]
+
+[node name="ragdoll" parent="." instance=ExtResource("1_6sixf")]
+transform = Transform3D(1, 0, 0, 0, -0.996063, 0.0886509, 0, -0.0886509, -0.996063, 1.96071, 7.92999, -1.9418)

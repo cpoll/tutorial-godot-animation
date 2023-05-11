@@ -4,6 +4,7 @@ extends CharacterBody3D
 @onready var spring_arm_pivot = $SpringArmPivot
 @onready var spring_arm = $SpringArmPivot/SpringArm3D
 @onready var animation_tree = $AnimationTree
+@onready var skeleton = $Armature/Skeleton3D
 
 const MAX_SPEED = 5.0
 const JUMP_VELOCITY = 5.5
@@ -15,7 +16,18 @@ var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 func _ready():
     Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
+# Capture mouse as a result of an input (browser restriction)
+# See: https://docs.godotengine.org/en/stable/tutorials/export/exporting_for_web.html#full-screen-and-mouse-capture
+# TODO: Allow for recapture if the user Escs out of capture.
+var captureMouse = false
+func _input(event):
+    if event is InputEventMouseButton and not captureMouse:
+        Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+        captureMouse = true
+
 func _unhandled_input(event):
+    
+    
     if Input.is_action_just_pressed("quit"):
         get_tree().quit()
         
@@ -63,7 +75,7 @@ func _physics_process(delta):
         velocity.x = lerp(direction.x, 0.0, LERP_VAL)
         velocity.z = lerp(direction.z, 0.0, LERP_VAL)
 
-    print(velocity.length() / MAX_SPEED)
+    # print(velocity.length() / MAX_SPEED)
     animation_tree.set("parameters/walkrun/blend_position", velocity.length() / MAX_SPEED)
 
     move_and_slide()
