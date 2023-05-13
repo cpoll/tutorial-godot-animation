@@ -9,12 +9,29 @@ extends CharacterBody3D
 const MAX_SPEED = 5.0
 const JUMP_VELOCITY = 5.5
 const LERP_VAL = 0.15
+const FALLING_THRESHOLD_SECONDS = 2.0 # Play falling animation after falling this long
+
+var hang_time = 0;
 
 # Get the gravity from the project settings to be synced with RigidBody nodes.
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
+func switch_mesh(index):
+    # var meshes = [m for m in get_children() if m is MeshInstance3D]
+    var meshes = []
+    for child in skeleton.get_children():
+        if child is MeshInstance3D:
+            meshes.append(child)
+
+    for i in meshes.size():
+        if(i == index): meshes[i].show()
+        else: meshes[i].hide()
+        
+
 func _ready():
     Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+    
+    switch_mesh(0)
 
 # Capture mouse as a result of an input (browser restriction)
 # See: https://docs.godotengine.org/en/stable/tutorials/export/exporting_for_web.html#full-screen-and-mouse-capture
@@ -26,8 +43,6 @@ func _input(event):
         captureMouse = true
 
 func _unhandled_input(event):
-    
-    
     if Input.is_action_just_pressed("quit"):
         get_tree().quit()
         
@@ -39,9 +54,19 @@ func _unhandled_input(event):
         spring_arm.rotation.x = clamp(spring_arm.rotation.x, -PI/4, PI/4)
 
 func _physics_process(delta):
+    
     # Add the gravity.
-    if not is_on_floor():
+    if is_on_floor():
+        hang_time = 0;
+    else:
         velocity.y -= gravity * delta
+        hang_time += delta;
+
+    # Switch characters
+    if Input.is_action_just_pressed("character_1"):
+        switch_mesh(0)
+    elif Input.is_action_just_pressed("character_2"):
+        switch_mesh(1)
 
     # Handle Jump.
     if Input.is_action_just_pressed("jump") and is_on_floor():
@@ -51,7 +76,7 @@ func _physics_process(delta):
         $AnimationTree.set("parameters/jump/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
 
     # Set falling animation
-    if not is_on_floor() and not (animation_tree.get("parameters/fall/active") or animation_tree.get("parameters/jump/active")):
+    if hang_time > FALLING_THRESHOLD_SECONDS and not (animation_tree.get("parameters/fall/active")):
         $AnimationTree.set("parameters/fall/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
 
     # Unset jumping and falling when on the ground
