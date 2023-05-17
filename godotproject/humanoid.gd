@@ -6,12 +6,14 @@ extends CharacterBody3D
 @onready var animation_tree = $AnimationTree
 @onready var skeleton = $Armature/Skeleton3D
 
+
 const MAX_SPEED = 5.0
 const JUMP_VELOCITY = 5.5
 const LERP_VAL = 0.15
 const FALLING_THRESHOLD_SECONDS = 2.0 # Play falling animation after falling this long
 
 var hang_time = 0;
+var state_machine;
 
 # Get the gravity from the project settings to be synced with RigidBody nodes.
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
@@ -30,6 +32,7 @@ func switch_mesh(index):
 
 func _ready():
     Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+    state_machine = $AnimationTree.get("parameters/playback");
     
     switch_mesh(0)
 
@@ -53,8 +56,7 @@ func _unhandled_input(event):
         # Clamp looking up and down. Comment this out for some fun:
         spring_arm.rotation.x = clamp(spring_arm.rotation.x, -PI/4, PI/4)
 
-func _physics_process(delta):
-    
+func _physics_process(delta):        
     # Add the gravity.
     if is_on_floor():
         hang_time = 0;
@@ -71,18 +73,15 @@ func _physics_process(delta):
     # Handle Jump.
     if Input.is_action_just_pressed("jump") and is_on_floor():
         velocity.y = JUMP_VELOCITY
-        
-        # TODO: Unjank animation
-        $AnimationTree.set("parameters/jump/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+        state_machine.travel("jump")
 
     # Set falling animation
-    if hang_time > FALLING_THRESHOLD_SECONDS and not (animation_tree.get("parameters/fall/active")):
-        $AnimationTree.set("parameters/fall/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+    if hang_time > FALLING_THRESHOLD_SECONDS:
+        state_machine.travel("fall")
 
     # Unset jumping and falling when on the ground
-    if is_on_floor() and (animation_tree.get("parameters/jump/active") or animation_tree.get("parameters/fall/active")):
-        $AnimationTree.set("parameters/jump/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_ABORT)
-        $AnimationTree.set("parameters/fall/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_ABORT)
+    if is_on_floor() and (state_machine.get_current_node() in ["jump", "fall"]):
+        state_machine.travel("walkrun")
 
     # Get the input direction and handle the movement/deceleration.
     var input_dir = Input.get_vector("left", "right", "forward", "back")
@@ -102,5 +101,6 @@ func _physics_process(delta):
 
     # print(velocity.length() / MAX_SPEED)
     animation_tree.set("parameters/walkrun/blend_position", velocity.length() / MAX_SPEED)
+    # state_machine.set("", velocity.length() / MAX_SPEED)
 
     move_and_slide()
